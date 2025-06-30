@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>DoomScroll Touch Fix</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      touch-action: none;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #scroll-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100%;
+      overflow-y: scroll;
+    }
+
+    #scroll-container {
+      width: 100vw;
+    }
+
+    .block {
+      height: 100vh;
+      background: white;
+    }
+
+    .gap {
+      height: 24px;
+      background: black;
+    }
+
+    #heatmap {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      width: 100vw;
+      height: 100vh;
+      z-index: 99999; /* raised z-index */
+    }
+
+    @media (min-width: 768px) {
+      #scroll-container {
+        width: 360px;
+        background: white;
+        box-shadow: 0 0 0 2px black;
+      }
+
+      .block {
+        height: 640px;
+        background: white;
+      }
+
+      .gap {
+        height: 24px;
+        background: black;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="heatmap"></canvas>
+
+<div id="scroll-wrapper">
+  <div id="scroll-container"></div>
+</div>
+
+<script>
+  const container = document.getElementById("scroll-container");
+  for (let i = 0; i < 500; i++) {
+    const block = document.createElement("div");
+    block.className = "block";
+    container.appendChild(block);
+    const gap = document.createElement("div");
+    gap.className = "gap";
+    container.appendChild(gap);
+  }
+
+  const canvas = document.getElementById("heatmap");
+  const ctx = canvas.getContext("2d");
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  function fadeCanvas() {
+    ctx.fillStyle = "rgba(255,255,255,0.01)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function drawTouch(x, y, force = 0.1) {
+    const radius = 50 + force * 100;
+    ctx.save();
+    ctx.fillStyle = `rgba(255, 0, 0, ${0.2 + force})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y, radius, radius * 0.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function getTouchPos(e) {
+    const t = e.touches?.[0] || e.changedTouches?.[0];
+    return t ? { x: t.clientX, y: t.clientY, force: t.force || 0.1 } : null;
+  }
+
+  function handleTouch(e) {
+    const pos = getTouchPos(e);
+    if (pos) drawTouch(pos.x, pos.y, pos.force);
+  }
+
+  canvas.addEventListener("touchstart", handleTouch);
+  canvas.addEventListener("touchmove", handleTouch);
+  canvas.addEventListener("touchend", handleTouch);
+
+  setInterval(fadeCanvas, 50);
+</script>
+
+</body>
+</html>
