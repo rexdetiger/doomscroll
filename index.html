@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DoomScroll</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      height: auto;
+      min-height: 100%;
+      overflow-x: hidden;
+      touch-action: auto;
+    }
+
+    #scroll-container {
+      width: 100vw;
+    }
+
+    .block {
+      height: 100vh;
+      background: white;
+      margin-bottom: 24px;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="scroll-container"></div>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    // Create scrollable blocks
+    const container = document.getElementById('scroll-container');
+    for (let i = 0; i < 30; i++) {
+      const block = document.createElement('div');
+      block.className = 'block';
+      block.style.background = i % 2 === 0 ? '#ffffff' : '#f4f4f4';
+      container.appendChild(block);
+    }
+
+    // Set up brush canvas
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    let touches = {};
+
+    function draw() {
+      // fade out effect
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(0, 0, width, height);
+
+      const now = Date.now();
+      Object.entries(touches).forEach(([id, touch]) => {
+        const age = now - touch.time;
+        if (age < 1000) {
+          const alpha = 1 - age / 1000;
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
+          ctx.ellipse(touch.x, touch.y, 30, 30, 0, 0, 2 * Math.PI);
+          ctx.fill();
+        } else {
+          delete touches[id];
+        }
+      });
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    function handleTouchMove(e) {
+      const now = Date.now();
+      for (const t of e.touches) {
+        touches[t.identifier] = {
+          x: t.clientX,
+          y: t.clientY,
+          time: now
+        };
+      }
+    }
+
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+    // Resize canvas if needed
+    window.addEventListener('resize', () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    });
+  </script>
+</body>
+</html>
