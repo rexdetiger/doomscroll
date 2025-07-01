@@ -1,0 +1,97 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DoomScroll Updated</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      height: 100%;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #scroll-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .block {
+      width: 90vw;
+      height: 90vh;
+      background: white;
+      margin: 5vh auto;
+      border-radius: 25px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="scroll-wrapper">
+    <div class="block"><canvas></canvas></div>
+    <div class="block"><canvas></canvas></div>
+    <div class="block"><canvas></canvas></div>
+    <div class="block"><canvas></canvas></div>
+  </div>
+
+  <script>
+    const blocks = document.querySelectorAll('.block');
+
+    blocks.forEach(block => {
+      const canvas = block.querySelector('canvas');
+      const ctx = canvas.getContext('2d');
+      let width = canvas.width = block.clientWidth;
+      let height = canvas.height = block.clientHeight;
+
+      let touches = [];
+
+      function draw() {
+        ctx.clearRect(0, 0, width, height);
+        touches.forEach((touch, index) => {
+          ctx.beginPath();
+          let radius = 40 * (1 - index / touches.length);
+          ctx.fillStyle = `rgba(255, 0, 0, ${1 - index / touches.length})`;
+          ctx.ellipse(touch.x, touch.y, radius, radius, 0, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        if (touches.length > 0) {
+          touches.shift(); // fade trail
+        }
+        requestAnimationFrame(draw);
+      }
+
+      draw();
+
+      block.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        touches.push({
+          x: touch.clientX - rect.left,
+          y: touch.clientY - rect.top
+        });
+        if (touches.length > 20) touches = touches.slice(-20); // keep it limited
+      }, { passive: false });
+
+      // Update canvas size on resize
+      window.addEventListener('resize', () => {
+        width = canvas.width = block.clientWidth;
+        height = canvas.height = block.clientHeight;
+      });
+    });
+  </script>
+</body>
+</html>
