@@ -3,32 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DoomScroll</title>
+  <title>Doom Scroll</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       background: black;
       overflow-x: hidden;
-      touch-action: none;
+      font-family: sans-serif;
     }
 
-    #scroll-wrapper {
+    .container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 100px;
-      padding: 50px 0 200px; /* reduce top padding */
     }
 
-    .block {
+    .page {
       width: 90vw;
-      height: 90vh;
+      height: 100vh;
+      margin: 5vh 0;
       border-radius: 60px;
-      background: radial-gradient(circle at center, white 0%, #111 80%, black 100%);
-      box-shadow: 0 0 140px 80px black;
+      background: radial-gradient(ellipse at center, white 0%, #222 100%);
       position: relative;
-      overflow: hidden;
+      box-shadow: 0 0 120px 60px black inset;
     }
 
     canvas {
@@ -40,58 +38,71 @@
   </style>
 </head>
 <body>
-  <div id="scroll-wrapper">
-    <!-- Enough blocks to force scrolling -->
-    <div class="block"><canvas></canvas></div>
-    <div class="block"><canvas></canvas></div>
-    <div class="block"><canvas></canvas></div>
-    <div class="block"><canvas></canvas></div>
-    <div class="block"><canvas></canvas></div>
-    <div class="block"><canvas></canvas></div>
-    <div class="block"><canvas></canvas></div>
-    <div class="block"><canvas></canvas></div>
-    <div class="block"><canvas></canvas></div>
-    <div class="block"><canvas></canvas></div>
+  <div class="container" id="scrollContainer">
+    <div class="page"></div>
+    <div class="page"></div>
+    <div class="page"></div>
+    <div class="page"></div>
+    <div class="page"></div>
   </div>
 
+  <canvas id="brushCanvas"></canvas>
+
   <script>
-    const blocks = document.querySelectorAll('.block');
+    const canvas = document.getElementById('brushCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
 
-    blocks.forEach(block => {
-      const canvas = block.querySelector('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = block.clientWidth;
-      canvas.height = block.clientHeight;
+    let points = [];
 
-      let touches = [];
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
 
-      block.addEventListener('touchmove', e => {
-        const rect = canvas.getBoundingClientRect();
-        for (let t of e.touches) {
-          touches.push({
-            x: t.clientX - rect.left,
-            y: t.clientY - rect.top,
-            radius: 50,
-            alpha: 1.0
-          });
-        }
-      });
+      for (let i = 0; i < points.length; i++) {
+        let p = points[i];
+        let alpha = 1 - (Date.now() - p.time) / 1000;
+        if (alpha <= 0) continue;
 
-      function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        touches = touches.filter(dot => dot.alpha > 0.01);
-        for (let dot of touches) {
-          ctx.beginPath();
-          ctx.fillStyle = `rgba(255,0,0,${dot.alpha})`;
-          ctx.ellipse(dot.x, dot.y, dot.radius * dot.alpha, dot.radius * dot.alpha * 0.7, 0, 0, Math.PI * 2);
-          ctx.fill();
-          dot.alpha *= 0.92;
-        }
-        requestAnimationFrame(draw);
+        let radius = p.size * alpha;
+        let gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius);
+        gradient.addColorStop(0, `rgba(255, 0, 0, ${alpha})`);
+        gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+        ctx.fill();
       }
 
-      draw();
+      // Remove old points
+      points = points.filter(p => Date.now() - p.time < 1000);
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
     });
+
+    function addPoint(x, y) {
+      points.push({
+        x,
+        y,
+        time: Date.now(),
+        size: 50 + Math.random() * 30 // Large brush strokes
+      });
+    }
+
+    window.addEventListener('pointermove', (e) => {
+      addPoint(e.clientX, e.clientY);
+    });
+
+    draw();
   </script>
 </body>
 </html>
