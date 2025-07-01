@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doom Scroll</title>
+  <style>
+    html, body {
+      margin: 0;
+      background: black;
+      overflow-x: hidden;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 100px;
+      padding: 100px 0;
+    }
+
+    .block {
+      width: 90vw;
+      height: 100vh;
+      border-radius: 60px;
+      background: radial-gradient(circle, white 0%, #222 80%, black 100%);
+      box-shadow: 0 0 140px 80px black inset;
+      position: relative;
+      z-index: 0;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="brushCanvas"></canvas>
+  <div class="container">
+    <div class="block"></div>
+    <div class="block"></div>
+    <div class="block"></div>
+    <div class="block"></div>
+    <div class="block"></div>
+    <div class="block"></div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('brushCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    let trail = [];
+    let isDrawing = false;
+
+    window.addEventListener('resize', () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    });
+
+    window.addEventListener('pointerdown', (e) => {
+      isDrawing = true;
+      trail.push({
+        x: e.clientX,
+        y: e.clientY,
+        time: Date.now(),
+        size: 50 + Math.random() * 20
+      });
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isDrawing) return;
+      trail.push({
+        x: e.clientX,
+        y: e.clientY,
+        time: Date.now(),
+        size: 50 + Math.random() * 20
+      });
+    });
+
+    window.addEventListener('pointerup', () => isDrawing = false);
+    window.addEventListener('pointercancel', () => isDrawing = false);
+
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+      const now = Date.now();
+      trail = trail.filter(p => now - p.time < 1500);
+
+      for (let i = 0; i < trail.length; i++) {
+        const p = trail[i];
+        const alpha = 1 - (now - p.time) / 1500;
+        const radius = p.size * alpha;
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
+        ctx.ellipse(p.x, p.y, radius, radius * 0.7, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+  </script>
+</body>
+</html>
