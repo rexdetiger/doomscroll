@@ -17,16 +17,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 120px;
-      padding: 200px 0;
+      gap: 100px;
+      padding: 50px 0 200px; /* reduce top padding */
     }
 
     .block {
       width: 90vw;
-      height: 85vh;
+      height: 90vh;
       border-radius: 60px;
-      background: radial-gradient(circle at center, white 0%, #111 85%, black 100%);
-      box-shadow: 0 0 120px 60px black;
+      background: radial-gradient(circle at center, white 0%, #111 80%, black 100%);
+      box-shadow: 0 0 140px 80px black;
       position: relative;
       overflow: hidden;
     }
@@ -41,7 +41,7 @@
 </head>
 <body>
   <div id="scroll-wrapper">
-    <!-- Enough blocks to force scroll -->
+    <!-- Enough blocks to force scrolling -->
     <div class="block"><canvas></canvas></div>
     <div class="block"><canvas></canvas></div>
     <div class="block"><canvas></canvas></div>
