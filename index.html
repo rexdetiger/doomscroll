@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DoomScroll</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      touch-action: none;
+      height: 100%;
+      overflow-x: hidden;
+    }
+
+    #scroll-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .scroll-block {
+      width: 90vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, white 50%, rgba(0, 0, 0, 0.8) 100%);
+      margin: 10vh 0;
+      border-radius: 60px;
+      position: relative;
+      box-shadow: 0 0 80px 80px black inset;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div id="scroll-wrapper">
+    <div class="scroll-block"></div>
+    <div class="scroll-block"></div>
+    <div class="scroll-block"></div>
+    <div class="scroll-block"></div>
+    <div class="scroll-block"></div>
+  </div>
+  <canvas id="brush"></canvas>
+  <script>
+    const canvas = document.getElementById('brush');
+    const ctx = canvas.getContext('2d');
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    let touches = [];
+
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+      ctx.lineCap = 'round';
+
+      for (let i = 0; i < touches.length; i++) {
+        const t = touches[i];
+        let opacity = 1 - (i / touches.length);
+        let radius = 40 - (i / touches.length) * 30;
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255, 0, 0, ${opacity})`;
+        ctx.arc(t.x, t.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    function handleTouch(e) {
+      e.preventDefault();
+      for (let touch of e.touches) {
+        touches.push({ x: touch.clientX, y: touch.clientY });
+      }
+      if (touches.length > 40) touches.splice(0, touches.length - 40);
+    }
+
+    canvas.addEventListener('touchmove', handleTouch, { passive: false });
+    canvas.addEventListener('touchstart', handleTouch, { passive: false });
+
+    window.addEventListener('resize', () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    });
+
+    draw();
+  </script>
+</body>
+</html>
