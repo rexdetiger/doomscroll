@@ -9,8 +9,8 @@
       margin: 0;
       padding: 0;
       background: black;
-      touch-action: none;
       overflow-x: hidden;
+      touch-action: none;
     }
 
     #scroll-wrapper {
@@ -18,12 +18,12 @@
       flex-direction: column;
       align-items: center;
       gap: 120px;
-      padding: 100px 0;
+      padding: 200px 0;
     }
 
     .block {
       width: 90vw;
-      height: 90vh;
+      height: 85vh;
       border-radius: 60px;
       background: radial-gradient(circle at center, white 0%, #111 85%, black 100%);
       box-shadow: 0 0 120px 60px black;
@@ -41,6 +41,12 @@
 </head>
 <body>
   <div id="scroll-wrapper">
+    <!-- Enough blocks to force scroll -->
+    <div class="block"><canvas></canvas></div>
+    <div class="block"><canvas></canvas></div>
+    <div class="block"><canvas></canvas></div>
+    <div class="block"><canvas></canvas></div>
+    <div class="block"><canvas></canvas></div>
     <div class="block"><canvas></canvas></div>
     <div class="block"><canvas></canvas></div>
     <div class="block"><canvas></canvas></div>
