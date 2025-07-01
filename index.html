@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Doom Scroll</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: black;
+      overflow-y: scroll;
+      overscroll-behavior-y: contain;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 100px;
+      padding: 100px 0;
+    }
+
+    .white-block {
+      width: 90vw;
+      height: 120vh;
+      border-radius: 50px;
+      position: relative;
+      background: radial-gradient(circle, white 0%, #999 40%, black 100%);
+      box-shadow: 0 0 80px 40px black inset;
+      overflow: hidden;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="white-block"></div>
+    <div class="white-block"></div>
+    <div class="white-block"></div>
+    <div class="white-block"></div>
+  </div>
+
+  <script>
+    const blocks = document.querySelectorAll('.white-block');
+
+    blocks.forEach(block => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = block.clientWidth;
+      canvas.height = block.clientHeight;
+      block.appendChild(canvas);
+
+      let painting = false;
+      let touches = [];
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < touches.length; i++) {
+          const t = touches[i];
+          const opacity = Math.max(0, 1 - (Date.now() - t.time) / 1200);
+          const radius = 60 * opacity;
+          ctx.beginPath();
+          ctx.arc(t.x, t.y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,0,0,${opacity})`;
+          ctx.fill();
+        }
+
+        touches = touches.filter(t => Date.now() - t.time < 1200);
+        requestAnimationFrame(draw);
+      }
+
+      block.addEventListener('touchstart', (e) => {
+        painting = true;
+        for (let touch of e.touches) {
+          const rect = canvas.getBoundingClientRect();
+          touches.push({ x: touch.clientX - rect.left, y: touch.clientY - rect.top, time: Date.now() });
+        }
+      });
+
+      block.addEventListener('touchmove', (e) => {
+        if (!painting) return;
+        for (let touch of e.touches) {
+          const rect = canvas.getBoundingClientRect();
+          touches.push({ x: touch.clientX - rect.left, y: touch.clientY - rect.top, time: Date.now() });
+        }
+      });
+
+      block.addEventListener('touchend', () => painting = false);
+      draw();
+    });
+  </script>
+</body>
+</html>
