@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DoomScroll</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      height: auto;
+      min-height: 100%;
+      overflow-x: hidden;
+      touch-action: auto;
+    }
+
+    #scroll-container {
+      width: 100vw;
+    }
+
+    .block {
+      height: 100vh;
+      background: white;
+      margin-bottom: 24px;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="scroll-container"></div>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const container = document.getElementById('scroll-container');
+    for (let i = 0; i < 30; i++) {
+      const block = document.createElement('div');
+      block.className = 'block';
+      container.appendChild(block);
+    }
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let width = document.documentElement.scrollWidth;
+    let height = document.documentElement.scrollHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    window.addEventListener('resize', () => {
+      width = document.documentElement.scrollWidth;
+      height = document.documentElement.scrollHeight;
+      canvas.width = width;
+      canvas.height = height;
+    });
+
+    let trails = [];
+
+    function draw() {
+      const now = Date.now();
+      ctx.clearRect(0, 0, width, height);
+
+      trails = trails.filter(t => now - t.time < 1000);
+
+      for (const t of trails) {
+        const age = now - t.time;
+        const alpha = 1 - age / 1000;
+        const size = 14 * (alpha + 0.2);
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
+        ctx.ellipse(t.x, t.y, size, size * 0.6, 0, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    function handleTouchMove(e) {
+      const now = Date.now();
+      for (let i = 0; i < e.touches.length; i++) {
+        const t = e.touches[i];
+        trails.push({ x: t.clientX + window.scrollX, y: t.clientY + window.scrollY, time: now });
+      }
+    }
+
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+  </script>
+</body>
+</html>
