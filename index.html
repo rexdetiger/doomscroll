@@ -9,18 +9,19 @@
       margin: 0;
       padding: 0;
       background: black;
-      height: 100%;
+      height: auto;
+      min-height: 100%;
       overflow-x: hidden;
       touch-action: none;
     }
 
     #scroll-container {
+      display: block;
       width: 100vw;
     }
 
     .block {
       height: 100vh;
-      width: 100%;
       background: white;
       margin-bottom: 24px;
     }
@@ -39,15 +40,16 @@
   <canvas id="canvas"></canvas>
 
   <script>
-    // Create lots of white blocks
+    // Create 30 blocks with alternating whites for visibility
     const container = document.getElementById('scroll-container');
     for (let i = 0; i < 30; i++) {
       const block = document.createElement('div');
       block.className = 'block';
+      block.style.background = i % 2 === 0 ? '#ffffff' : '#f4f4f4';
       container.appendChild(block);
     }
 
-    // Brush drawing setup
+    // Set up canvas for finger trail
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     let width = window.innerWidth;
@@ -56,10 +58,9 @@
     canvas.height = height;
 
     let drawing = false;
-    let lastX, lastY;
     let opacity = 0;
 
-    function draw(x, y, pressure = 0.1) {
+    function draw(x, y) {
       ctx.beginPath();
       ctx.fillStyle = `rgba(255, 0, 0, ${opacity})`;
       ctx.ellipse(x, y, 30, 30, 0, 0, 2 * Math.PI);
@@ -68,7 +69,7 @@
 
     function fadeCanvas() {
       ctx.fillStyle = 'rgba(255,255,255,0.05)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, width, height);
     }
 
     setInterval(fadeCanvas, 50);
@@ -76,14 +77,12 @@
     function updatePosition(e) {
       const x = e.touches ? e.touches[0].clientX : e.clientX;
       const y = e.touches ? e.touches[0].clientY : e.clientY;
-      if (drawing) {
-        draw(x, y);
-      }
+      if (drawing) draw(x, y);
     }
 
     function startDraw(e) {
       drawing = true;
-      opacity = 0.1;
+      opacity = 0.15;
       updatePosition(e);
     }
 
@@ -92,9 +91,17 @@
       opacity = 0;
     }
 
-    document.addEventListener('touchstart', startDraw);
-    document.addEventListener('touchmove', updatePosition);
-    document.addEventListener('touchend', endDraw);
+    document.addEventListener('touchstart', startDraw, { passive: false });
+    document.addEventListener('touchmove', updatePosition, { passive: false });
+    document.addEventListener('touchend', endDraw, { passive: false });
+
+    // Resize canvas when needed
+    window.addEventListener('resize', () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    });
   </script>
 </body>
 </html>
